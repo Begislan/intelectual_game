@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Интеллектуальная игра · Эрудит PRO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --gold: #D7B95E;
+      --gold-light: #F5E2A0;
+      --gold-dark: #A27D2A;
+      --bg-dark: #0C0C1A;
+      --bg-card: #13132B;
+      --bg-panel: #181835;
+      --text: #F2EFE6;
+      --text-muted: #A9A9C9;
+      --accent: #5D9BEC;
+      --correct: #4CDB8C;
+      --warning: #F5A623;
+      --danger: #E74C3C;
+      --border: rgba(215, 185, 94, 0.35);
+      --radius-md: 12px;
+      --radius-sm: 10px;
+    }
+
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      text-align: center;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #0A0A18 0%, #12122A 100%);
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: calc(1.8rem + 0.6vw);
+      color: var(--gold);
+      letter-spacing: 0.03em;
+      text-shadow: 0 2px 12px rgba(215,185,94,0.25);
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .game-layout {
+      display: flex;
+      flex: 1;
+      flex-direction: row;
+      gap: 0;
+      height: calc(100vh - 98px);
+      min-height: 550px;
+    }
+
+    .questions-panel {
+      flex: 1.2;
+      padding: 1.2rem;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      background: rgba(0,0,0,0.2);
+    }
+
+    .left-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .left-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .active-cat-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--gold);
+      background: rgba(215,185,94,0.12);
+      padding: 4px 10px;
+      border-radius: 30px;
+      letter-spacing: 0.03em;
+    }
+
+    .category-section {
+      margin-bottom: 2rem;
+    }
+
+    .category-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .category-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .category-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+      gap: 10px;
+    }
+
+    .card-btn {
+      aspect-ratio: 1 / 1;
+      border: 1.8px solid var(--border);
+      background: var(--bg-card);
+      color: var(--gold);
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .card-btn:hover:not(.used):not(.answered-correct) {
+      border-color: var(--gold);
+      background: #252550;
+      transform: scale(1.02);
+      box-shadow: 0 0 12px rgba(215,185,94,0.4);
+    }
+
+    .card-btn.active {
+      border-color: var(--gold);
+      background: var(--gold);
+      color: #0C0C1A;
+      box-shadow: 0 0 20px rgba(215,185,94,0.6);
+    }
+
+    .card-btn.answered-correct {
+      opacity: 0.55;
+      background: rgba(76,219,140,0.2);
+      border-color: var(--correct);
+      color: var(--correct);
+      text-decoration: none;
+      font-size: 1.8rem;
+      font-weight: bold;
+      cursor: default;
+    }
+
+    .right-panel {
+      width: 460px;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      backdrop-filter: blur(2px);
+    }
+
+    .categories-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.2);
+    }
+
+    .cat-tab {
+      flex: 1 0 auto;
+      padding: 0.7rem 0.6rem;
+      border: 1px solid transparent;
+      background: rgba(20,20,55,0.7);
+      color: var(--text-muted);
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 40px;
+      text-align: center;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .cat-tab .cat-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .cat-tab:hover {
+      background: rgba(215,185,94,0.12);
+      color: var(--gold-light);
+    }
+
+    .cat-tab.active {
+      border-color: var(--gold);
+      background: rgba(215,185,94,0.2);
+      color: var(--gold);
+      box-shadow: 0 0 6px rgba(215,185,94,0.3);
+    }
+
+    /* Кнопка сброса */
+    .reset-btn {
+      background: rgba(231, 76, 60, 0.15);
+      border: 1px solid rgba(231, 76, 60, 0.5);
+      color: #E74C3C;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 40px;
+      padding: 0.5rem 1rem;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .reset-btn:hover {
+      background: rgba(231, 76, 60, 0.3);
+      border-color: #E74C3C;
+      transform: scale(1.02);
+    }
+
+    .cat-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .question-area {
+      flex: 1;
+      padding: 1.8rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .q-placeholder {
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .q-placeholder .icon {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 1rem;
+      opacity: 0.4;
+    }
+
+    .question-card {
+      display: none;
+      flex-direction: column;
+      gap: 1.6rem;
+    }
+
+    .question-card.visible {
+      display: flex;
+    }
+
+    .q-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      flex-wrap: wrap;
+    }
+
+    .q-num-badge {
+      background: var(--gold);
+      color: #0C0C1A;
+      font-weight: 800;
+      font-family: 'Playfair Display', serif;
+      padding: 4px 14px;
+      border-radius: 40px;
+      font-size: 1rem;
+    }
+
+    .timer-badge {
+      background: rgba(0,0,0,0.5);
+      color: var(--gold-light);
+      font-family: monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 40px;
+      letter-spacing: 0.05em;
+    }
+
+    .timer-badge.warning {
+      color: var(--warning);
+      animation: pulse 0.5s infinite;
+    }
+
+    .timer-badge.danger {
+      color: var(--danger);
+      animation: pulse 0.3s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .q-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+      line-height: 1.4;
+      font-weight: 700;
+      color: var(--text);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .answer-reveal {
+      background: rgba(76,219,140,0.12);
+      border-left: 4px solid var(--correct);
+      border-radius: 12px;
+      padding: 1rem 1.3rem;
+      display: none;
+      margin-top: 0.2rem;
+    }
+
+    .answer-reveal.visible {
+      display: block;
+    }
+
+    .answer-reveal .ans-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--correct);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .answer-reveal .ans-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      line-height: 1.4;
+      color: #BCF0C8;
+    }
+
+    .action-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 0.25rem;
+    }
+
+    .btn-reveal, .btn-done {
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.75rem 1rem;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 0.9rem;
+      border: none;
+    }
+
+    .btn-reveal {
+      background: transparent;
+      border: 1.5px solid var(--gold);
+      color: var(--gold);
+    }
+
+    .btn-reveal:hover {
+      background: var(--gold);
+      color: #0C0C1A;
+    }
+
+    .btn-done {
+      background: rgba(76,219,140,0.15);
+      border: 1px solid var(--correct);
+      color: var(--correct);
+    }
+
+    .btn-done:hover {
+      background: rgba(76,219,140,0.35);
+      color: white;
+    }
+
+    .scoreboard {
+      border-top: 1px solid var(--border);
+      padding: 0.9rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0,0,0,0.3);
+    }
+
+    .score-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .score-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    @media (max-width: 780px) {
+      .game-layout {
+        flex-direction: column;
+        height: auto;
+      }
+      .questions-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        max-height: 48vh;
+      }
+      .right-panel {
+        width: 100%;
+        min-height: 52vh;
+      }
+      .q-text {
+        font-size: 1.45rem;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .q-text {
+        font-size: 1.3rem;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1E1E30;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--gold);
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⬦ ИНТЕЛЛЕКТУАЛЫ PRO ⬦</h1>
+  <p>Знания + скорость + звук + сохранение</p>
+</header>
+
+<div class="game-layout">
+  <div class="questions-panel">
+    <div class="left-header">
+      <h2>🗂️ ВОПРОСЫ</h2>
+      <span class="active-cat-name" id="active-cat-display">—</span>
+    </div>
+    <div id="cards-container"></div>
+  </div>
+
+  <div class="right-panel">
+    <div class="categories-bar" id="categories-bar">
+      <!-- Сюда будут добавлены вкладки категорий -->
+    </div>
+
+    <div class="question-area">
+      <div class="q-placeholder" id="placeholder">
+        <span class="icon">◈ ◈ ◈</span>
+        <p>выберите вопрос на панели слева</p>
+        <p style="font-size: 0.8rem; margin-top: 6px;">нажмите на цифру, чтобы открыть</p>
+      </div>
+
+      <div class="question-card" id="question-card">
+        <div class="q-meta">
+          <span class="q-num-badge" id="q-num">1</span>
+          <span id="q-cat-name" style="font-weight:600;">—</span>
+          <span class="timer-badge" id="timer-display">⏱️ 30с</span>
+        </div>
+        <div class="q-text" id="q-text">...</div>
+        <div class="answer-reveal" id="answer-reveal">
+          <div class="ans-label">✓ ПРАВИЛЬНЫЙ ОТВЕТ</div>
+          <div class="ans-text" id="ans-text">...</div>
+        </div>
+        <div class="action-btns">
+          <button class="btn-reveal" id="btn-reveal">🔍 Показать ответ</button>
+          <button class="btn-done" id="btn-done">✅ Принять ответ / закрыть вопрос</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="scoreboard">
+      <div>
+        <div class="score-label">✔️ ОТВЕЧЕНО</div>
+        <div class="score-val"><span id="answered-count">0</span> / <span id="total-count">50</span></div>
+      </div>
+      <div style="text-align:right">
+        <div class="score-label">🏷️ ТЕМА</div>
+        <div class="score-val" style="font-size:1.1rem; color:var(--gold-light);" id="score-cat">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ======================= БАЗА ДАННЫХ =======================
+  const CATEGORIES = 
+[
+  {
+    name: "Физика",
+    color: "#3498DB",
+    questions: [
+      { q: "Күндүн айланасын Жер канча убакытта бир айланып чыгат?", a: "1 жыл (365 күн)" },
+      { q: "Жарык менен үндүн кайсынысы ылдам кыймылдайт?", a: "Жарык" },
+      { q: "Суу канча градус Цельсийде кайнайт?", a: "100°C" },
+      { q: "Исаак Ньютондун башына алма түшкөндө кайсы законду ачканы айтылат?", a: "Бүткүл дүйнөлүк тартылуу мыйзам" },
+      { q: "Заттын төртүнчү абалы деп эмнени айтабыз? (Катуу, суюк жана газдан сырткары)", a: "Плазма" },
+      { q: "Жарыктын боштуктагы (вакуумдагы) ылдамдыгы секундасына канча километрге жетет?", a: "300 000 км/сек" },
+      { q: "Сүрүлүү күчүн азайтуу үчүн адатта эмне колдонулат?", a: " Май (майлоочу заттар)" },
+      { q: "Күндөгү энергия кайсы термоядролук реакциядан бөлүнүп чыгат?", a: "Суутектин гелийге айлануусу" },
+      { q: "Абсолюттук нөл температурасы Цельсий шкаласы боюнча канчага барабар?", a: "-273°C" },
+    ]
+  },
+  {
+    name: "Химия",
+    color: "#E67E22",
+    questions: [
+      { q: "Металлмын, бирок бөлмө температурасында суюк абалда болом. Мен киммин?", a: "Сымап (Ртуть)" },
+      { q: "Мезгилдик таблицада биринчи орунда турам, космосто эң көп тараган элементмин. Мен киммин?", a: "Суутек (Водород)" },
+      { q: "Күйүүнү колдойм, бирок өзүм күйбөйм. Тирүү организмдер үчүн жашоо булагымын. Мен киммин?", a: "Кычкылтек (Кислород)" },
+      { q: "Алмаз да, карапайым көмүр да бир эле элементтен турат. Ал кайсы элемент?", a: "Көмүртек (Углерод)" },
+      { q: "Ашканада ар дайым колдонулуучу натрий хлориди бизге кандай ат менен кеңири белгилүү?", a: "Аш тузу" },
+      { q: "Алтын менен күмүштү эритип, баалуу металлдарды тазалоодо колдонулуучу кислоталардын аралашмасы кандай аталат?", a: "Падыша аралашмасы (Царская водка)" },
+      { q: "Медицинада наркоз жана «күлкү газы» катары белгилүү болгон химиялык зат кайсы?", a: "Диазот оксиди (Азоттун закиси)" },
+      { q: "Жер кыртышында массасы боюнча эң көп тараган металл кайсы?", a: "Алюминий" },
+      { q: "Абага караганда кыйла жеңил, аэростаттарды үйлөөдө колдонулуучу инерттүү газ кайсы?", a: "Гелий" },
+    ]
+  },
+  {
+    name: "Макал-лакаптар",
+    color: "#2ECC71",
+    questions: [
+      { q: "«... сууда чөкпөйт, отко күйбөйт» — бош орунга кайсы зат же кубулуш коюлат?", a: "Муз" },
+      { q: "«Суунун да сурагы бар» — бул макал табияттагы кайсы физикалык процесске тиешелүү?", a: "Заттын сакталуу мыйзамы же суунун айланышы" },
+      { q: "«Темирди кызуусунда сок» — физикада металлды ысытканда анын кайсы касиети өзгөрөт?", a: "Ийпилгичтиги (пластикалуулугу)" },
+      { q: "«Тамчыдан ... куралат» — кичинекей нерселерден чоң чогулуу процессин түшүндүргөн макал.", a: "Көл" },
+      { q: "«Отсуз ... чыкпайт» — реагентсиз химиялык реакция же жылуулуксуз процесс болбой турганын билдирген макал.", a: "Түтүн" },
+      { q: "«Аккан сууда кир калбайт» — суунун кайсы диффузиялык жана эритүүчү касиетине тиешелүү?", a: "Өзүн-өзү тазалоо жана эритүүчүлүк" },
+      { q: "«Сүткө күйгөн, ... үйлөп ичет» — жылуулук берүү жана конвекция кубулушуна тиешелүү макал.", a: "Айранды" },
+      { q: "«Шамал болбосо, чөптүн башы кыймылдабайт» — физикадагы сырткы күчтүн таасири тууралуу макал.", a: "Күч жана анын натыйжасы" },
+      { q: "«Көргөн сөз — чын, уккан сөз — калп» — жарык менен үндүн кайсы физикалык касиетине катыштуу?", a: "Жарыктын ылдамдыгы үн ылдамдыгынан алда канча жогору" },
+     ]
+  },
+  {
+    name: "Табышмактар",
+    color: "#9B59B6",
+    questions: [
+      { q: "Өзү тунук, түсү жок, ансыз жашоо таптакыр жок. Ал эмне?", a: "Суу (H2O)" },
+      { q: "Көрүнбөйт өзү колуңа, канат кагат жолуңа. Кемпир-чалдарды жөлөйт да, бак-даракты ийет да. Ал эмне?", a: "Шамал (Абанын кыймылы)" },
+      { q: "Жайында кийим кийгизет, кышында чечиндирет. Күн чыкса сүйүнөт, көлөкөдө үшүйт. Ал эмне?", a: "Муз / Кар" },
+      { q: "Буту жок, колу жок, бирок каалганы ачат, бактарды сындырат. Көзгө көрүнбөйт. Ал эмне?", a: "Күч / Шамал" },
+      { q: "Урмайынча сүйлөбөйт, таяк жебей күүлөнбөйт. Кылгандары кабар берет, үнү ыраакка жетет. Ал эмне?", a: "Коңгуроо (Үн толкундары)" },
+      { q: "Көрүнбөйт, кармалбайт, бирок ашыкча тийсең «чагат». Токту өткөрөт, жарык берет. Ал эмне?", a: "Электр тогу" },
+      { q: "Асмандан түшөт ак ун, тоолорду жабат ак тонго. Бирок ысыкка чыдабай, суу болуп агат эшикке. Ал эмне?", a: "Кар" },
+      { q: "Кара таштай көрүнөт, жаксаң отко эрийт/күйөт. Энергия берет, капкара түстө болот. Ал эмне?", a: "Көмүр (Углерод)" },
+      { q: "Жарык көрсө качат, караңгыда өсөт. Жаныңда дайым басат, кармайын десең жоголот. Ал эмне?", a: "Көлөкө" },
+      ]
+  }
+]
+
+
+
+  // ======================= ЗВУКИ =======================
+  function playClickSound() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.frequency.value = 880;
+      gainNode.gain.value = 0.12;
+      oscillator.type = 'sine';
+      oscillator.start();
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.25);
+      oscillator.stop(audioCtx.currentTime + 0.25);
+    } catch(e) { console.log('audio not supported'); }
+  }
+
+  function playSuccessSound() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.frequency.value = 523.25;
+      gainNode.gain.value = 0.18;
+      oscillator.type = 'triangle';
+      oscillator.start();
+      oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.35);
+      oscillator.stop(audioCtx.currentTime + 0.35);
+    } catch(e) {}
+  }
+
+  function playResetSound() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.frequency.value = 440;
+      gainNode.gain.value = 0.15;
+      oscillator.type = 'sine';
+      oscillator.start();
+      oscillator.frequency.setValueAtTime(330, audioCtx.currentTime + 0.15);
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4);
+      oscillator.stop(audioCtx.currentTime + 0.4);
+    } catch(e) {}
+  }
+
+  // ======================= СОСТОЯНИЯ =======================
+  let answeredState = {};
+  let activeCardRef = null;
+  let activeRevealed = false;
+  let timerInterval = null;
+  let timeLeft = 30;
+  let currentTimerQuestionKey = null;
+
+  // DOM элементы
+  const cardsContainer = document.getElementById('cards-container');
+  const catBar = document.getElementById('categories-bar');
+  const placeholder = document.getElementById('placeholder');
+  const questionCardDiv = document.getElementById('question-card');
+  const qNumSpan = document.getElementById('q-num');
+  const qCatNameSpan = document.getElementById('q-cat-name');
+  const qTextSpan = document.getElementById('q-text');
+  const ansTextSpan = document.getElementById('ans-text');
+  const answerRevealDiv = document.getElementById('answer-reveal');
+  const btnReveal = document.getElementById('btn-reveal');
+  const btnDone = document.getElementById('btn-done');
+  const answeredCountSpan = document.getElementById('answered-count');
+  const totalCountSpan = document.getElementById('total-count');
+  const activeCatDisplay = document.getElementById('active-cat-display');
+  const scoreCatSpan = document.getElementById('score-cat');
+  const timerDisplay = document.getElementById('timer-display');
+
+  let currentCategoryIdx = 0;
+
+  // ======================= LOCALSTORAGE =======================
+  function saveProgress() {
+    localStorage.setItem('quizAnsweredState', JSON.stringify(answeredState));
+  }
+
+  function loadProgress() {
+    const saved = localStorage.getItem('quizAnsweredState');
+    if (saved) {
+      answeredState = JSON.parse(saved);
+      updateScoreUI();
+    }
+  }
+
+  function getAnsweredCount() {
+    return Object.values(answeredState).filter(v => v === true).length;
+  }
+
+  function updateScoreUI() {
+    answeredCountSpan.textContent = getAnsweredCount();
+  }
+
+  // ======================= СБРОС ПРОГРЕССА =======================
+  function resetAllProgress() {
+    if (confirm('🔄 ВНИМАНИЕ! Это действие удалит ВСЕ отвеченные вопросы и обнулит прогресс.\n\nВы уверены, что хотите начать игру заново?')) {
+      // Очищаем состояние
+      answeredState = {};
+      activeCardRef = null;
+      activeRevealed = false;
+      stopTimer();
+
+      // Очищаем localStorage
+      localStorage.removeItem('quizAnsweredState');
+
+      // Обновляем UI
+      updateScoreUI();
+      renderAllCards();
+
+      // Закрываем открытый вопрос, если был
+      questionCardDiv.classList.remove('visible');
+      placeholder.style.display = 'block';
+      answerRevealDiv.classList.remove('visible');
+
+      // Сбрасываем таймер
+      if (timerDisplay) {
+        timerDisplay.textContent = '⏱️ 30с';
+        timerDisplay.classList.remove('warning', 'danger');
+      }
+
+      // Восстанавливаем активную категорию
+      if (currentCategoryIdx !== undefined) {
+        activeCatDisplay.textContent = CATEGORIES[currentCategoryIdx].name;
+        scoreCatSpan.textContent = CATEGORIES[currentCategoryIdx].name;
+      }
+
+      // Проигрываем звук сброса
+      playResetSound();
+
+      // Небольшая задержка для завершения звука
+      setTimeout(() => {
+        alert('✨ Прогресс сброшен! Игра начинается заново. Удачи! ✨');
+      }, 50);
+    }
+  }
+
+  // ======================= ТАЙМЕР =======================
+  function stopTimer() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    timeLeft = 30;
+    currentTimerQuestionKey = null;
+    if (timerDisplay) {
+      timerDisplay.textContent = '⏱️ 30с';
+      timerDisplay.classList.remove('warning', 'danger');
+    }
+  }
+
+  function startTimerForQuestion(ci, n) {
+    stopTimer();
+    const key = `${ci}-${n}`;
+    if (answeredState[key] === true) return;
+
+    currentTimerQuestionKey = key;
+    timeLeft = 30;
+    updateTimerDisplay();
+
+    timerInterval = setInterval(() => {
+      if (currentTimerQuestionKey !== `${ci}-${n}`) {
+        return;
+      }
+      if (answeredState[key] === true) {
+        stopTimer();
+        return;
+      }
+
+      if (timeLeft <= 0) {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        timerDisplay.textContent = '⏱️ 0с';
+        timerDisplay.classList.add('danger');
+      } else {
+        timeLeft--;
+        updateTimerDisplay();
+        if (timeLeft <= 5) {
+          timerDisplay.classList.add('danger');
+        } else if (timeLeft <= 10) {
+          timerDisplay.classList.add('warning');
+        }
+      }
+    }, 1000);
+  }
+
+  function updateTimerDisplay() {
+    if (timerDisplay) {
+      timerDisplay.textContent = `⏱️ ${timeLeft}с`;
+    }
+  }
+
+  // ======================= ОТРИСОВКА КАРТОЧЕК =======================
+  function renderAllCards() {
+    cardsContainer.innerHTML = '';
+    for (let ci = 0; ci < CATEGORIES.length; ci++) {
+      const cat = CATEGORIES[ci];
+      const section = document.createElement('div');
+      section.className = 'category-section';
+
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'category-header';
+      headerDiv.innerHTML = `
+        <span class="category-dot" style="background: ${cat.color};"></span>
+        <span class="category-name">${cat.name}</span>
+      `;
+      section.appendChild(headerDiv);
+
+      const grid = document.createElement('div');
+      grid.className = 'cards-grid';
+
+      for (let n = 1; n <= 9; n++) {
+        const key = `${ci}-${n}`;
+        const isAnswered = answeredState[key] === true;
+        const btn = document.createElement('button');
+        btn.className = 'card-btn';
+        if (isAnswered) {
+          btn.classList.add('answered-correct');
+          btn.textContent = '✓';
+        } else {
+          btn.textContent = n;
+        }
+        if (activeCardRef && activeCardRef.ci === ci && activeCardRef.n === n && !isAnswered) {
+          btn.classList.add('active');
+        }
+        btn.onclick = (function(catIdx, qNum, alreadyAnswered) {
+          return function() {
+            if (alreadyAnswered) return;
+            playClickSound();
+            selectQuestion(catIdx, qNum);
+          };
+        })(ci, n, isAnswered);
+        grid.appendChild(btn);
+      }
+      section.appendChild(grid);
+      cardsContainer.appendChild(section);
+    }
+  }
+
+  // ======================= ВЫБОР ВОПРОСА =======================
+  function selectQuestion(categoryIdx, questionNumber) {
+    const key = `${categoryIdx}-${questionNumber}`;
+    if (answeredState[key] === true) return;
+
+    if (activeCardRef) {
+      stopTimer();
+    }
+
+    activeCardRef = { ci: categoryIdx, n: questionNumber };
+    currentCategoryIdx = categoryIdx;
+    activeRevealed = false;
+
+    updateCategoriesTabActive(categoryIdx);
+    activeCatDisplay.textContent = CATEGORIES[categoryIdx].name;
+    scoreCatSpan.textContent = CATEGORIES[categoryIdx].name;
+
+    placeholder.style.display = 'none';
+    questionCardDiv.classList.add('visible');
+
+    const cat = CATEGORIES[categoryIdx];
+    const qData = cat.questions[questionNumber - 1];
+    qNumSpan.textContent = questionNumber;
+    qCatNameSpan.textContent = cat.name;
+    qTextSpan.textContent = qData.q;
+    ansTextSpan.textContent = qData.a;
+
+    answerRevealDiv.classList.remove('visible');
+    btnReveal.style.display = 'block';
+    btnReveal.textContent = '🔍 Показать правильный ответ';
+
+    startTimerForQuestion(categoryIdx, questionNumber);
+    renderAllCards();
+  }
+
+  // ======================= ОТКРЫТЬ ОТВЕТ =======================
+  function revealAnswer() {
+    if (!activeCardRef) return;
+    const key = `${activeCardRef.ci}-${activeCardRef.n}`;
+    if (answeredState[key] === true) return;
+    if (!activeRevealed) {
+      playClickSound();
+      answerRevealDiv.classList.add('visible');
+      activeRevealed = true;
+      btnReveal.style.display = 'none';
+    }
+  }
+
+  // ======================= ПРИНЯТЬ ОТВЕТ =======================
+  function markDone() {
+    if (!activeCardRef) return;
+    const { ci, n } = activeCardRef;
+    const key = `${ci}-${n}`;
+    if (answeredState[key] === true) return;
+
+    playSuccessSound();
+    answeredState[key] = true;
+    saveProgress();
+    updateScoreUI();
+
+    stopTimer();
+    activeCardRef = null;
+    activeRevealed = false;
+
+    questionCardDiv.classList.remove('visible');
+    placeholder.style.display = 'block';
+    answerRevealDiv.classList.remove('visible');
+
+    renderAllCards();
+
+    if (currentCategoryIdx !== undefined) {
+      activeCatDisplay.textContent = CATEGORIES[currentCategoryIdx].name;
+      scoreCatSpan.textContent = CATEGORIES[currentCategoryIdx].name;
+    }
+
+    if (getAnsweredCount() === CATEGORIES.length * 10) {
+      setTimeout(() => {
+        alert('🏆 ПОЗДРАВЛЯЕМ! 🏆\nВы ответили на все 36 вопросов! Вы — настоящий эрудит!');
+      }, 100);
+    }
+  }
+
+  // ======================= ВКЛАДКИ КАТЕГОРИЙ =======================
+  function updateCategoriesTabActive(activeIdx) {
+    const allTabs = document.querySelectorAll('.cat-tab');
+    allTabs.forEach((tab, idx) => {
+      if (idx === activeIdx) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
+  }
+
+  function selectCategoryByTab(catIndex) {
+    playClickSound();
+    currentCategoryIdx = catIndex;
+    updateCategoriesTabActive(catIndex);
+    activeCatDisplay.textContent = CATEGORIES[catIndex].name;
+    scoreCatSpan.textContent = CATEGORIES[catIndex].name;
+
+    if (activeCardRef) {
+      stopTimer();
+      activeCardRef = null;
+      activeRevealed = false;
+    }
+    questionCardDiv.classList.remove('visible');
+    placeholder.style.display = 'block';
+    answerRevealDiv.classList.remove('visible');
+    renderAllCards();
+  }
+
+  function buildCategoriesTabs() {
+    catBar.innerHTML = '';
+    CATEGORIES.forEach((cat, idx) => {
+      const tabBtn = document.createElement('button');
+      tabBtn.className = 'cat-tab' + (idx === 0 ? ' active' : '');
+      tabBtn.innerHTML = `<span class="cat-dot" style="background:${cat.color}"></span>${cat.name}`;
+      tabBtn.onclick = () => selectCategoryByTab(idx);
+      catBar.appendChild(tabBtn);
+    });
+
+    // Добавляем кнопку сброса справа от вкладок
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'reset-btn';
+    resetBtn.innerHTML = '🔄 СБРОСИТЬ ВСЁ';
+    resetBtn.onclick = () => resetAllProgress();
+    resetBtn.title = 'Сбросить прогресс и начать игру заново';
+    catBar.appendChild(resetBtn);
+  }
+
+  // ======================= ИНИЦИАЛИЗАЦИЯ =======================
+  function initGame() {
+    totalCountSpan.textContent = CATEGORIES.length * 9;
+    loadProgress();
+    updateScoreUI();
+    buildCategoriesTabs();
+    renderAllCards();
+    activeCatDisplay.textContent = CATEGORIES[0].name;
+    scoreCatSpan.textContent = CATEGORIES[0].name;
+    placeholder.style.display = 'block';
+    questionCardDiv.classList.remove('visible');
+    answerRevealDiv.classList.remove('visible');
+
+    btnReveal.onclick = () => revealAnswer();
+    btnDone.onclick = () => markDone();
+  }
+
+  initGame();
+</script>
+</body>
+</html>

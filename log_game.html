@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ky">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Логикалык оюн</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(19, 26, 48, .72);
+      --line: #2a3560;
+      --text: #eef1fb;
+      --muted: #8f9bc2;
+      --accent: #5b8cff;
+      --accent-2: #9b6bff;
+      --ok: #1fc77a;
+      --bad: #ff4d5e;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    #backgroundVideo {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -3;
+    }
+
+    #overlay {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(900px 500px at 10% -10%, rgba(40, 70, 170, .55), transparent 60%),
+        radial-gradient(800px 500px at 100% 110%, rgba(110, 50, 190, .5), transparent 55%),
+        rgba(8, 12, 28, .82);
+    }
+
+    /* Бүт беттин жылмакай жымыңдоосу (Туура / Ката) */
+    #flash {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .5s ease;
+    }
+    #flash.ok { background: radial-gradient(circle at 50% 30%, rgba(31, 199, 122, .4), transparent 65%); opacity: 1; }
+    #flash.bad { background: radial-gradient(circle at 50% 30%, rgba(255, 77, 94, .45), transparent 65%); opacity: 1; }
+
+    .app {
+      width: min(1120px, 100%);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 220px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ---------- Суроо картасы ---------- */
+    .question {
+      min-height: 230px;
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      transition: background-color .4s, border-color .4s, box-shadow .4s;
+    }
+
+    .question .tag {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    #questionBox {
+      margin: 0;
+      font-weight: 800;
+      font-size: clamp(22px, 3.2vw, 40px);
+      line-height: 1.3;
+      letter-spacing: -.01em;
+      text-wrap: balance;
+    }
+
+    #questionBox.placeholder {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: clamp(20px, 2.6vw, 30px);
+    }
+
+    #questionBox.big { font-size: clamp(34px, 5.5vw, 70px); }
+
+    .question.correct {
+      background: rgba(31, 199, 122, .22);
+      border-color: var(--ok);
+      box-shadow: 0 0 0 4px rgba(31, 199, 122, .18), 0 30px 80px rgba(0, 0, 0, .45);
+    }
+
+    .question.wrong {
+      background: rgba(255, 77, 94, .22);
+      border-color: var(--bad);
+      box-shadow: 0 0 0 4px rgba(255, 77, 94, .18), 0 30px 80px rgba(0, 0, 0, .45);
+    }
+
+    /* ---------- Плиткалар ---------- */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    .cube {
+      appearance: none;
+      border: 1px solid var(--line);
+      aspect-ratio: 1 / 0.8;
+      border-radius: 18px;
+      cursor: pointer;
+      color: var(--text);
+      font: 800 clamp(22px, 3vw, 38px)/1 "Manrope", sans-serif;
+      background: linear-gradient(145deg, rgba(38, 51, 95, .85), rgba(18, 26, 60, .85));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+      transition: transform .15s ease, background .25s, opacity .25s, border-color .25s;
+    }
+
+    .cube:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      background: linear-gradient(145deg, #34478a, #1c2a66);
+    }
+
+    .cube:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+    .cube.clicked {
+      opacity: .38;
+      background: rgba(10, 15, 36, .7);
+      border-style: dashed;
+      box-shadow: none;
+    }
+
+    .cube.current {
+      opacity: 1;
+      border: 2px solid var(--accent);
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 10px 28px rgba(91, 140, 255, .4);
+    }
+
+    /* ---------- Башкаруу ---------- */
+    #controls {
+      position: sticky;
+      top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 18px;
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .stat { font-size: 14px; color: var(--muted); }
+    .stat b { color: var(--text); font-size: 18px; }
+
+    .button {
+      font: 800 20px/1 "Manrope", sans-serif;
+      color: #fff;
+      border: 0;
+      border-radius: 14px;
+      padding: 16px 14px;
+      cursor: pointer;
+      transition: transform .15s ease, filter .15s ease;
+    }
+
+    .button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+    .button:active { transform: translateY(0); }
+    .button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+    #pauseButton { background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 22px rgba(91, 140, 255, .3); }
+    #showAnswerButton { background: linear-gradient(135deg, #1fc77a, #0f9d5d); box-shadow: 0 8px 22px rgba(31, 199, 122, .28); }
+    #showXButton { background: linear-gradient(135deg, #ff4d5e, #d12b45); box-shadow: 0 8px 22px rgba(255, 77, 94, .28); }
+
+    @media (max-width: 860px) {
+      .app { grid-template-columns: 1fr; }
+      #controls {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        order: -1;
+        align-items: center;
+      }
+      .stat { width: 100%; }
+      .button { flex: 1 1 0; font-size: 17px; padding: 14px 8px; }
+      .grid { gap: 8px; }
+      .cube { border-radius: 14px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <video id="backgroundVideo" autoplay loop muted playsinline>
+    <source src="vid_game.mov" type="video/mp4">
+  </video>
+  <div id="overlay"></div>
+  <div id="flash"></div>
+
+  <main class="app">
+    <section>
+      <div class="question" id="questionCard">
+        <span class="tag" id="questionTag">Суроо</span>
+        <p id="questionBox" class="placeholder">Суроону көрүү үчүн сан тандаңыз</p>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <aside id="controls">
+      <div class="stat">Сурала элек: <b id="left">0</b></div>
+     <button id="showAnswerButton" class="button" type="button">Туура</button>
+    </aside>
+    <a href="Интеллектуалдык оюн (1).html"><button style="background-color: #d12b45;" class="button" type="button">Башкы бетке чыгуу</button></a>
+  </main>
+
+  <audio id="clickSound" src="open.mp3"></audio>
+  <audio id="timerSound" src="to_think14.MP3"></audio>
+  <audio id="greenButtonSound" src="open_answer.mp3"></audio>
+  <audio id="blueButtonSound" src="failed.mp3"></audio>
+
+  
+
+  <script>
+    const questions = [
+      "Эгерде балыктын массасы 750 гр жана өзүнүн салмагынын төрттөн үч бөлүгүнүн массасынын суммасына барабар болсо, балыктын массасы канчага барабар?",
+      "30 самса 40 нандан 300 сомго кымбат. Ушул эле 30 самса, 50 нандан 210 сомго кымбат. Бир самса жана бир нан канча сом турат?",
+      "Кайсыл аял күйөөсүнүн кайда кеткенин билет?",
+      "Көзүн ачып жүргөндө адам бир кыймыл-аракетти кыла албайт. Аны жасаганда сөзсүз көзүн жумат. Бул кайсыл кыймыл-аракет?",
+      "Кайсыл бир жаныбар өзүнүн боюнан бир нече бийикке секире алат. Ал кайсыл спортсмен жаныбар?",
+      "Сокур көрүү кубанычынан айрылган, бирок ишенет. Дудук сүйлөө кубанычынан айрылган, бирок ал дагы ишенет. Ишенүүдөн айрылган адам эмнеге ээ болбошу мүмкүн?",
+      "Жыгач дарыяда жыгач кеме сүзүп жүрөт. Анын түтүнү да жыгачтан. Бул эмне?",
+      "Эч кандай сандарды (1,2,3 ж.б.) жана аптадагы күндөрдүн аталыштарын (дүйшөмбү, шейшемби, шаршемби ж.б.) айтпай туруп беш күндү атап берсе болобу?",
+      "Столдо сызгыч, калем, циркуль жана өчүргүч жатат. Баракка айлананы түшүрүү керек. Бул үчүн эмнеден баштайбыз?",
+      "Бир бала шатынын төртүнү бутунан түшүп кетип, бир бутун сындырып алган. Эгерде ал шатынын он экинчи бутунан түшүп кетсе, анда канча бутун сындырат?",
+      "Эмне үчүн көпөс шляпа сатып алат?",
+      "Иш жок кезде илинип турат, иште болсо жайылып-жазылат. Ал эми иштен кийин суу болуп калат. Бул эмне?",
+      "Терезеде А И Б отурушат. А түшүп калса, Б жоголуп кетсе, терезеде ким калат?",
+      "Эненин төрт уулу бар. Алар төрөлө элек. Эгер алар төрөлсө, эне сөзсүз каза болушу керек. Эмне жөнүндө сөз болду?",
+      "Ал ак болгон мезгилде, булганыч(кир) болот. Ал эми күрөң, жашыл болгондо, таза деп саналат. Бул эмне?",
+    ];
+
+    const answers = [
+      "3 кг",
+      "Самса 22, Нан 9 сом",
+      "Жесир аял",
+      "Чүчкүрүү",
+      "Бүргө",
+      "Үмүткө ээ болбойт",
+      "Чоң сүргү(Рубанок)",
+      "Мурда күнү, кечээ, бүгүн, эртең, бүрсүгүнү",
+      "Баракты алуудан",
+      "Бир эле бутун, Анткени бир бутун алдын сындырып алган",
+      "Анткени бекер беришпейт",
+      "Кол чатыр",
+      "И калат",
+      "Жаңгак",
+      "Мектептеги класстык доска"
+    ];
+
+    const grid = document.getElementById("grid");
+    const questionBox = document.getElementById("questionBox");
+    const questionCard = document.getElementById("questionCard");
+    const questionTag = document.getElementById("questionTag");
+    const flash = document.getElementById("flash");
+    const leftEl = document.getElementById("left");
+
+    const clickSound = document.getElementById("clickSound");
+    const timerSound = document.getElementById("timerSound");
+    const greenButtonSound = document.getElementById("greenButtonSound");
+    const blueButtonSound = document.getElementById("blueButtonSound");
+
+    const pauseButton = document.getElementById("pauseButton");
+    const showAnswerButton = document.getElementById("showAnswerButton");
+    const showXButton = document.getElementById("showXButton");
+
+    let timer;
+    let resetTimer;
+    let lastQuestionIndex = -1;
+    const cubes = [];
+
+    function safePlay(el) {
+      el.currentTime = 0;
+      const p = el.play();
+      if (p && p.catch) p.catch(() => { });
+    }
+
+    function stopSound(el) {
+      el.pause();
+      el.currentTime = 0;
+    }
+
+    function updateLeft() {
+      leftEl.textContent = cubes.filter(c => !c.classList.contains("clicked") && !c.classList.contains("current")).length
+        + (lastQuestionIndex !== -1 ? 0 : 0);
+    }
+
+    function clearState() {
+      clearTimeout(resetTimer);
+      questionCard.classList.remove("correct", "wrong");
+      flash.className = "";
+    }
+
+    function showState(type) {
+      clearState();
+      questionCard.classList.add(type === "ok" ? "correct" : "wrong");
+      flash.className = type;
+      resetTimer = setTimeout(() => {
+        questionCard.classList.remove("correct", "wrong");
+        flash.className = "";
+      }, 2000);
+    }
+
+    questions.forEach((question, index) => {
+      const cube = document.createElement("button");
+      cube.type = "button";
+      cube.className = "cube";
+      cube.textContent = index + 1;
+      cube.setAttribute("aria-label", "Суроо " + (index + 1));
+
+      cube.addEventListener("click", () => {
+        stopSound(timerSound);
+        safePlay(clickSound);
+        clearState();
+
+        cubes.forEach(c => c.classList.remove("current"));
+        cube.classList.remove("clicked");
+        cube.classList.add("current");
+
+        questionBox.textContent = question;
+        questionBox.classList.remove("placeholder", "big");
+        questionTag.textContent = "Суроо № " + (index + 1);
+        lastQuestionIndex = index;
+        updateLeft();
+
+        // Суроо көрүнгөндөн кийин плитка "колдонулган" болуп калат
+        cubes.forEach((c, i) => {
+          if (i !== index && c.dataset.used === "1") c.classList.add("clicked");
+        });
+        cube.dataset.used = "1";
+
+        clearTimeout(timer);
+        timer = setTimeout(() => safePlay(timerSound), 1500);
+      });
+
+      cubes.push(cube);
+      grid.appendChild(cube);
+    });
+
+    // Азыркы суроодон башка колдонулган плиткаларды бир гана жолу көрсөтүү
+    cubes.forEach(c => c.addEventListener("click", () => {
+      cubes.forEach(x => {
+        if (x.dataset.used === "1" && !x.classList.contains("current")) x.classList.add("clicked");
+      });
+      updateLeft();
+    }));
+
+    function countLeft() {
+      leftEl.textContent = cubes.filter(c => c.dataset.used !== "1").length;
+    }
+    countLeft();
+    cubes.forEach(c => c.addEventListener("click", countLeft));
+
+    showAnswerButton.addEventListener("click", () => {
+      stopSound(timerSound);
+      clearTimeout(timer);
+      safePlay(greenButtonSound);
+      if (lastQuestionIndex !== -1) {
+        questionBox.textContent = answers[lastQuestionIndex];
+        questionBox.classList.add("big");
+        questionTag.textContent = "Туура жооп";
+        showState("ok");
+      }
+    });
+
+    showXButton.addEventListener("click", () => {
+      stopSound(timerSound);
+      clearTimeout(timer);
+      safePlay(blueButtonSound);
+      questionBox.textContent = "X";
+      questionBox.classList.remove("placeholder");
+      questionBox.classList.add("big");
+      questionTag.textContent = "Ката";
+      showState("bad");
+    });
+
+    pauseButton.addEventListener("click", () => {
+      stopSound(clickSound);
+      stopSound(timerSound);
+      clearTimeout(timer);
+    });
+  </script>
+</body>
+
+</html>
